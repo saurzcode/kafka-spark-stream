@@ -1,15 +1,10 @@
-package in.saurzcode.stream
+package in.saurzcode.stream.reader
 
-import org.apache.spark.sql.functions._
+import in.saurzcode.stream.config.TwitterKafkaConfig
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions.{current_timestamp, from_csv, max}
 import org.apache.spark.sql.streaming.Trigger
-import org.apache.spark.sql.types.{
-  IntegerType,
-  LongType,
-  StringType,
-  StructField,
-  StructType
-}
+import org.apache.spark.sql.types._
 
 object KafkaStreamReader {
 
@@ -32,8 +27,8 @@ object KafkaStreamReader {
     val streamDF =
       spark.readStream
         .format("kafka")
-        .option("kafka.bootstrap.servers", "localhost:9092")
-        .option("subscribe", "bigdata-tweets")
+        .option("kafka.bootstrap.servers", TwitterKafkaConfig.SERVERS)
+        .option("subscribe", TwitterKafkaConfig.TOPIC)
         .load()
 
     val finalDF = streamDF
