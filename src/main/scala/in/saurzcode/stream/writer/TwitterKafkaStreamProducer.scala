@@ -1,7 +1,7 @@
 package in.saurzcode.stream.writer
 
-import java.util.Properties
 import java.util.concurrent.LinkedBlockingQueue
+import java.util.{Collections, Properties}
 
 import com.google.gson.Gson
 import com.twitter.hbc.ClientBuilder
@@ -17,8 +17,6 @@ import org.apache.kafka.clients.producer.{
   ProducerRecord
 }
 import org.apache.kafka.common.serialization.{LongSerializer, StringSerializer}
-
-import scala.collection.JavaConverters._
 
 object TwitterKafkaStreamProducer {
 
@@ -47,7 +45,7 @@ object TwitterKafkaStreamProducer {
                   term: String): Unit = {
     val queue = new LinkedBlockingQueue[String](10000)
     val endpoint = new StatusesFilterEndpoint
-    endpoint.trackTerms(List(term).asJava)
+    endpoint.trackTerms(Collections.singletonList(term))
     val auth = new OAuth1(consumerKey, consumerSecret, token, secret)
     val client = new ClientBuilder()
       .hosts(Constants.STREAM_HOST)
@@ -63,7 +61,7 @@ object TwitterKafkaStreamProducer {
         val tweet = gson.fromJson(queue.take, classOf[Tweet])
         val key = tweet.getId
         val msg = tweet.toString
-        println("Got Tweet " + key + "from User" + tweet.getUser.getId)
+        println("Got Tweet -> " + key + " from User -> " + tweet.getUser.getId)
         val message =
           new ProducerRecord[Long, String](TwitterKafkaConfig.TOPIC, key, msg)
         producer.send(message)
@@ -81,7 +79,6 @@ object TwitterKafkaStreamProducer {
     val properties = new Properties
     properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG,
                    TwitterKafkaConfig.SERVERS)
-    properties.put(ProducerConfig.ACKS_CONFIG, "1")
     properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG,
                    classOf[LongSerializer].getName)
     properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG,
